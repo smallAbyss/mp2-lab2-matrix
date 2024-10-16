@@ -4,7 +4,7 @@
 //
 //
 
-#ifndef __TDynamicMatrix_H__
+#ifndef __TDynamicMatrix_H__  
 #define __TDynamicMatrix_H__
 
 #include <iostream>
@@ -61,7 +61,8 @@ public:
     {
             if (this == &v)
                     return *this;
-            if (sz != v.sz) {
+            if (sz != v.sz) 
+            {
                     T* p = new T[v.sz];
                     delete[] pMem;
                     sz = v.sz;
@@ -155,33 +156,30 @@ public:
     TDynamicVector operator+(const TDynamicVector& v)
     {
         if (sz != v.sz)
-            throw std::string("Different sizes while ..."); ///
+            throw std::string("Different sizes while ..."); 
         TDynamicVector tmp(*this);
-        for (size_t i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) 
             tmp.pMem[i] = tmp.pMem[i] + v.pMem[i];
-        }
         return tmp;
     }
 
     TDynamicVector operator-(const TDynamicVector& v)
     {
         if (sz != v.sz)
-            throw std::string("Different sizes while ..."); ///
+            throw std::string("Different sizes while ..."); 
         TDynamicVector tmp(*this);
-        for (size_t i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) 
             tmp.pMem[i] = tmp.pMem[i] - v.pMem[i];
-        }
         return tmp;
     }
 
     T operator*(const TDynamicVector& v)
     {
         if (sz != v.sz)
-            throw std::string("Different sizes while ..."); ///
+            throw std::string("Different sizes while ..."); 
         T tmp = 0;
-        for (size_t i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) 
             tmp += pMem[i] * v.pMem[i];
-        }
         return tmp;
     }
 
@@ -209,6 +207,7 @@ public:
 
 // Динамическая матрица - 
 // шаблонная матрица на динамической памяти
+
 template<typename T>
 class TDynamicMatrix : private TDynamicVector<TDynamicVector<T>>
 {
@@ -217,44 +216,114 @@ class TDynamicMatrix : private TDynamicVector<TDynamicVector<T>>
 public:
     TDynamicMatrix(size_t s = 1) : TDynamicVector<TDynamicVector<T>>(s)
     {
+        if (s > MAX_MATRIX_SIZE)
+            throw invalid_argument("Matrix size must be less than 10001");
         for (size_t i = 0; i < sz; i++)
             pMem[i] = TDynamicVector<T>(sz);
     }
 
+	TDynamicMatrix(const TDynamicMatrix<T>& m): TDynamicVector<TDynamicVector<T>>(m.sz) 
+	{
+		for (int i = 0; i < sz; i++)
+			pMem[i] = m[i];
+	}
+	
     using TDynamicVector<TDynamicVector<T>>::operator[];
+
+    using TDynamicVector<TDynamicVector<T>>::size;
+
+    using TDynamicVector<TDynamicVector<T>>::at;
 
     // сравнение
     bool operator==(const TDynamicMatrix& m) const noexcept
     {
+        return TDynamicVector<TDynamicVector<T>>::operator==(m);
+    }
+    
+    bool operator!=(const TDynamicMatrix& m) const noexcept
+    {
+        return TDynamicVector<TDynamicVector<T>>::operator!=(m);
     }
 
     // матрично-скалярные операции
     TDynamicMatrix operator*(const T& val)
     {
+        TDynamicMatrix tmp(sz);
+        for (size_t i = 0; i < sz; i++)
+            for (size_t j = 0; j < sz; j++)
+                    tmp.pMem[i][j] = val*pMem[i][j];
+        return tmp;
     }
 
     // матрично-векторные операции
     TDynamicVector<T> operator*(const TDynamicVector<T>& v)
     {
+        if (sz != v.sz)
+            throw invalid_argument("Cannot multiply matrices of different sizes");
+        TDynamicMatrix tmp(sz);
+        for (size_t i = 0; i < sz; i++)
+            for (size_t k = 0; k < sz; k++)
+                tmp.pMem[i][j] = pMem[i][k] * v.pMem[k];
+        return tmp;
+
     }
 
     // матрично-матричные операции
     TDynamicMatrix operator+(const TDynamicMatrix& m)
     {
+        if (sz != m.sz)
+            throw invalid_argument("Cannot sum matrices of different sizes");;
+        TDynamicMatrix tmp(sz);
+        for (size_t i = 0; i < sz; i++)
+            for (size_t j = 0; j < sz; j++)
+                    tmp.pMem[i][j] = pMem[i][j] + m.pMem[i][j];
+        return tmp;
     }
+
     TDynamicMatrix operator-(const TDynamicMatrix& m)
     {
+        if (sz != m.sz)
+            throw invalid_argument("Cannot substract matrices of different sizes");;
+        TDynamicMatrix tmp(sz);
+        for (size_t i = 0; i < sz; i++)
+            for (size_t j = 0; j < sz; j++)
+                    tmp.pMem[i][j] = pMem[i][j] - m.pMem[i][j];
+        return tmp;
     }
+
     TDynamicMatrix operator*(const TDynamicMatrix& m)
     {
+        if (sz != m.sz)
+            throw invalid_argument("Cannot multiply matrices of different sizes");;
+        TDynamicMatrix tmp(sz);
+        for (size_t i = 0; i < sz; i++)
+            for (size_t j = 0; j < sz; j++)
+                for (size_t k = 0; k < sz; k++)
+                    tmp.pMem[i][j] = pMem[i][k] * m.pMem[k][j];
+        return tmp;
     }
 
     // ввод/вывод
     friend istream& operator>>(istream& istr, TDynamicMatrix& v)
     {
+        for (size_t i = 0; i < v.sz; i++)
+        {
+            for (size_t j = 0; j < v.sz; j++)
+                istr >> v.pMem[i][j];
+            //istr >> std::endl;
+        }
+        return istr;
     }
+
     friend ostream& operator<<(ostream& ostr, const TDynamicMatrix& v)
     {
+        for (size_t i = 0; i < v.sz; i++)
+        {
+            for (size_t j = 0; j < v.sz; j++)
+                ostr << v.pMem[i][j] << ' ';
+            ostr << std::endl;
+        }
+        return ostr;
     }
 };
 
